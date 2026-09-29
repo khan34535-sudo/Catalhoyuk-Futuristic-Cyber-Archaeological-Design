@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Çatalhöyük · Enhanced Spatial Telemetry Matrix</title>
+<title>Çatalhöyük · Enhanced Spatial Telemetry Matrix [Openings & Stairs]</title>
 <style>
   :root {
     --bg: #03060a;
@@ -245,8 +245,8 @@
 <header>
   <div class="title-block">
     <div class="eyebrow" id="hdr-eyebrow">Çatalhöyük Spatial Telemetry Matrix</div>
-    <h1 id="hdr-title">Settlement Master Plan <em>[7 Buildings]</em></h1>
-    <div class="sub" id="hdr-sub">3D Holo-Spatial Mapping of 7 Primary Architectural Sectors (7100–5700 BCE)</div>
+    <h1 id="hdr-title">Settlement Master Plan <em>[7 Buildings: Openings & Stairs]</em></h1>
+    <div class="sub" id="hdr-sub">3D Holo-Spatial Mapping of 7 Primary Architectural Sectors with Roof Hatches & Ladders</div>
   </div>
   <div class="nav-group">
     <button class="nav-btn active" id="btn-master" onclick="switchMode('master')">Master Map</button>
@@ -353,7 +353,6 @@
 </div>
 
 <script>
-/* FULL DATASET FOR ALL 7 BUILDINGS WITH DUAL AUDIENCE DATA & CHRONOLOGY */
 window.AUDIENCE_MODE = 'academic';
 
 window.BUILDINGS = {
@@ -555,11 +554,10 @@ window.BUILDINGS = {
 
 <script>
 (function() {
-  const $ = id => document.getElementById(id);
+  const $= id =>$(id) || document.getElementById(id);
 
-  // Modal Controllers
-  window.closeModal = (id) => $(id).classList.remove('open');
-  window.openModal = (id) => $(id).classList.add('open');
+  window.closeModal = (id) => document.getElementById(id).classList.remove('open');
+  window.openModal = (id) => document.getElementById(id).classList.add('open');
 
   document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
@@ -568,14 +566,13 @@ window.BUILDINGS = {
     if (e.key === 'Escape') document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
   });
 
-  // Audience View Switcher
   window.setAudienceMode = (mode) => {
     window.AUDIENCE_MODE = mode;
-    $('btn-mode-academic').classList.toggle('active', mode === 'academic');$('btn-mode-public').classList.toggle('active', mode === 'public');
+    document.getElementById('btn-mode-academic').classList.toggle('active', mode === 'academic');
+    document.getElementById('btn-mode-public').classList.toggle('active', mode === 'public');
   };
 
-  // Render Sector Index Modal content
-  const gridContainer = $('index-grid-container');
+  const gridContainer = document.getElementById('index-grid-container');
   Object.keys(window.BUILDINGS).forEach(bId => {
     const b = window.BUILDINGS[bId];
     const card = document.createElement('div');
@@ -599,7 +596,7 @@ window.BUILDINGS = {
     
     const importanceText = window.AUDIENCE_MODE === 'academic' ? p.academic_importance : p.public_importance;
 
-    const body = $('modal-body');
+    const body = document.getElementById('modal-body');
     body.innerHTML = `
       <div class="meta-grid">
         <div class="meta-item"><strong>What (Material)</strong> ${p.what}</div>
@@ -615,17 +612,16 @@ window.BUILDINGS = {
         ${p.apa}
       </div>
     `;
-    $('modal-badge').textContent = p.badge;
-    $('modal-badge').style.background = p.badgeColor;
-    $('modal-who').textContent = `ANALYSED BY: ${p.who}`;
-    $('modal-title').textContent = p.title;
-    $('modal-subtitle').textContent = p.subtitle;
+    document.getElementById('modal-badge').textContent = p.badge;
+    document.getElementById('modal-badge').style.background = p.badgeColor;
+    document.getElementById('modal-who').textContent = `ANALYSED BY: ${p.who}`;
+    document.getElementById('modal-title').textContent = p.title;
+    document.getElementById('modal-subtitle').textContent = p.subtitle;
     openModal('modal-artifact');
   };
 })();
 </script>
 
-<!-- Import Three.js & OrbitControls -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
@@ -646,7 +642,6 @@ window.addEventListener('load', () => {
   controls.enableDamping = true;
   controls.dampingFactor = 0.05;
 
-  /* LIGHTING */
   scene.add(new THREE.AmbientLight(0x112233, 1.8));
   const mainLight = new THREE.PointLight(0x00f3ff, 2, 50);
   mainLight.position.set(0, 15, 0);
@@ -656,7 +651,6 @@ window.addEventListener('load', () => {
   amberLight.position.set(-10, 10, 10);
   scene.add(amberLight);
 
-  /* HOLO GRID TERRAIN */
   const gridHelper = new THREE.GridHelper(60, 60, 0x00f3ff, 0x002233);
   gridHelper.position.y = -0.01;
   scene.add(gridHelper);
@@ -665,13 +659,12 @@ window.addEventListener('load', () => {
   scene.add(masterGroup);
 
   const labelsContainer = document.getElementById('labels');
-  let currentMode = 'master'; // 'master' or 'building'
+  let currentMode = 'master';
   let activeBuildingId = null;
   let interactiveHotspots = [];
   let labelElements = [];
   let building3DMap = {};
 
-  /* BUILD 3D ARTIFACT METHOD */
   function build3DArtifact(type, colorHex) {
     const group = new THREE.Group();
     const color = new THREE.Color(colorHex);
@@ -706,7 +699,40 @@ window.addEventListener('load', () => {
     return group;
   }
 
-  /* CLEAR ALL INTERACTIVE LABELS & HOTSPOTS */
+  // BUILD ARCHITECTURAL ROOF HATCH & INTERNAL LADDER STAIRS
+  function buildRoofHatchAndStairs(height) {
+    const group = new THREE.Group();
+
+    // 1. Roof Hatch Square Collar (White glowing ring on top)
+    const hatchGeo = new THREE.RingGeometry(0.4, 0.5, 4);
+    const hatchMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+    const hatch = new THREE.Mesh(hatchGeo, hatchMat);
+    hatch.rotation.x = -Math.PI / 2;
+    hatch.position.set(0, height + 0.02, 0);
+    group.add(hatch);
+
+    // 2. Vertical Ladder Spars & Rungs (Amber columns descending inside)
+    const ladderGroup = new THREE.Group();
+    const sparGeo = new THREE.CylinderGeometry(0.03, 0.03, height, 6);
+    const ladderMat = new THREE.MeshBasicMaterial({ color: 0xffb454 });
+    
+    const spar1 = new THREE.Mesh(sparGeo, ladderMat);
+    spar1.position.set(-0.2, height / 2, 0);
+    const spar2 = spar1.clone();
+    spar2.position.set(0.2, height / 2, 0);
+    ladderGroup.add(spar1, spar2);
+
+    for(let y = 0.4; y < height; y += 0.5) {
+      const rungGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.4, 6);
+      const rung = new THREE.Mesh(rungGeo, ladderMat);
+      rung.rotation.z = Math.PI / 2;
+      rung.position.set(0, y, 0);
+      ladderGroup.add(rung);
+    }
+    group.add(ladderGroup);
+    return group;
+  }
+
   function clear3DScene() {
     while(masterGroup.children.length > 0) {
       masterGroup.remove(masterGroup.children[0]);
@@ -717,34 +743,29 @@ window.addEventListener('load', () => {
     building3DMap = {};
   }
 
-  /* RENDER ALL 7 BUILDINGS ON MASTER MAP */
   function renderMasterMap() {
     clear3DScene();
     currentMode = 'master';
     activeBuildingId = null;
 
     document.getElementById('btn-master').classList.add('active');
-    document.getElementById('hdr-title').innerHTML = 'Settlement Master Plan <em>[7 Buildings]</em>';
-    document.getElementById('hdr-sub').textContent = '3D Holo-Spatial Mapping of 7 Primary Architectural Sectors (7100–5700 BCE)';
+    document.getElementById('hdr-title').innerHTML = 'Settlement Master Plan <em>[7 Buildings: Openings & Stairs]</em>';
+    document.getElementById('hdr-sub').textContent = '3D Holo-Spatial Mapping of 7 Primary Architectural Sectors with Roof Hatches & Ladders';
     
-    // Set Legend
     const legendContent = document.getElementById('legend-content');
     legendContent.innerHTML = '';
     
-    // Position camera for Settlement View
     camera.position.set(28, 22, 32);
     controls.target.set(0, 0, 2);
 
     Object.keys(window.BUILDINGS).forEach(bId => {
       const b = window.BUILDINGS[bId];
       
-      // Legend entry
       const row = document.createElement('div');
       row.className = 'legend-row';
       row.innerHTML = `<span class="legend-dot" style="background:${b.color}; color:${b.color};"></span>${b.num}`;
       legendContent.appendChild(row);
 
-      // Building 3D Shell
       const bGroup = new THREE.Group();
       bGroup.position.set(...b.pos);
 
@@ -756,7 +777,6 @@ window.addEventListener('load', () => {
       bMesh.position.y = H/2;
       bGroup.add(bMesh);
 
-      // Floor plane
       const fMesh = new THREE.Mesh(
         new THREE.BoxGeometry(W, 0.1, D),
         new THREE.MeshBasicMaterial({ color: new THREE.Color(b.color), transparent: true, opacity: 0.2 })
@@ -764,17 +784,18 @@ window.addEventListener('load', () => {
       fMesh.position.y = 0.05;
       bGroup.add(fMesh);
 
+      // Append Roof Hatch & Internal Stairs to every building on Master map
+      bGroup.add(buildRoofHatchAndStairs(H));
+
       masterGroup.add(bGroup);
       building3DMap[bId] = bGroup;
 
-      // Click target box
       const hitMesh = new THREE.Mesh(new THREE.BoxGeometry(W+1, H+1, D+1), new THREE.MeshBasicMaterial({ visible: false }));
       hitMesh.position.set(b.pos[0], H/2, b.pos[2]);
       hitMesh.userData = { mode: 'building', bId: bId };
       scene.add(hitMesh);
       interactiveHotspots.push(hitMesh);
 
-      // 2D Spatial Label
       const el = document.createElement('div');
       el.className = 'spatial-label';
       el.style.color = b.color;
@@ -788,7 +809,6 @@ window.addEventListener('load', () => {
     });
   }
 
-  /* RENDER SINGLE BUILDING INTERIOR & ARTIFACTS */
   function renderSingleBuilding(bId) {
     clear3DScene();
     currentMode = 'building';
@@ -799,10 +819,9 @@ window.addEventListener('load', () => {
     document.getElementById('hdr-title').innerHTML = `${b.num}: ${b.title} <em>[${b.level}]</em>`;
     document.getElementById('hdr-sub').textContent = `${b.team} // ${b.intro}`;
 
-    // Update Legend to Artifact Types
     const legendContent = document.getElementById('legend-content');
     legendContent.innerHTML = `
-      <div class="legend-row"><span class="legend-dot" style="background:#ffb454; color:#ffb454;"></span>Architecture</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#ffb454; color:#ffb454;"></span>Roof Hatch & Stairs</div>
       <div class="legend-row"><span class="legend-dot" style="background:#b48fd9; color:#b48fd9;"></span>Bioarchaeology</div>
       <div class="legend-row"><span class="legend-dot" style="background:#00f3ff; color:#00f3ff;"></span>Lithics</div>
       <div class="legend-row"><span class="legend-dot" style="background:#ff0055; color:#ff0055;"></span>Residues</div>
@@ -812,7 +831,6 @@ window.addEventListener('load', () => {
     camera.position.set(11, 9, 12);
     controls.target.set(0, 1, 0);
 
-    // Render Detailed Building Shell
     const W = 9, D = 8, H = 3.2;
     const floorMesh = new THREE.Mesh(
       new THREE.BoxGeometry(W, 0.2, D),
@@ -828,7 +846,9 @@ window.addEventListener('load', () => {
     wireMesh.position.y = H / 2;
     masterGroup.add(wireMesh);
 
-    // Render Local Artifacts
+    // Add Roof Hatch & Internal Ladder Stairs to single interior view
+    masterGroup.add(buildRoofHatchAndStairs(H));
+
     b.artifacts.forEach(art => {
       const artGroup = new THREE.Group();
       artGroup.position.set(...art.pos);
@@ -852,7 +872,6 @@ window.addEventListener('load', () => {
       scene.add(hitMesh);
       interactiveHotspots.push(hitMesh);
 
-      // Label
       const el = document.createElement('div');
       el.className = 'spatial-label';
       el.style.color = art.color;
@@ -866,7 +885,6 @@ window.addEventListener('load', () => {
     });
   }
 
-  // Dynamic Timeline Filter Function
   window.updateTimeline = (year) => {
     const val = parseInt(year);
     const label = document.getElementById('year-label');
@@ -900,10 +918,8 @@ window.addEventListener('load', () => {
     else if (mode === 'building') renderSingleBuilding(bId);
   };
 
-  // Initial Load
   renderMasterMap();
 
-  /* PARTICLES FIELD */
   const pGeo = new THREE.BufferGeometry();
   const pCount = 200;
   const pPos = new Float32Array(pCount * 3);
@@ -912,7 +928,6 @@ window.addEventListener('load', () => {
   const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0x00f3ff, size: 0.05, transparent: true, opacity: 0.4 }));
   scene.add(particles);
 
-  /* RAYCASTING CLICK LISTENER */
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
 
@@ -939,7 +954,6 @@ window.addEventListener('load', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
-  /* ANIMATION LOOP */
   const clock = new THREE.Clock();
 
   function animate() {
@@ -955,7 +969,6 @@ window.addEventListener('load', () => {
       }
     });
 
-    // 3D to 2D Screen Label Projection
     const w = window.innerWidth, h = window.innerHeight;
     labelElements.forEach(item => {
       if (item.el.style.display === 'none') return;
